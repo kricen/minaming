@@ -1,0 +1,17 @@
+syntax="proto3";
+
+package pb;
+
+service ChatServer {
+    rpc SayHello (GreetReq) returns (GreetResq);
+}
+
+message GreetReq{
+  string name = 1;
+  string msg = 2;
+
+}
+
+message GreetResq{
+  string msg =1;
+}
