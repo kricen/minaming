@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
-type micro struct {
+type Micro struct {
 	serviceName string
 	port        int
 	// closeFuncChan chan closeFunc
@@ -23,7 +23,7 @@ type micro struct {
 }
 
 // NewMicro : initial a
-func NewMicro(serviceName, ip string, port int, endpoints []string) *micro {
+func NewMicro(serviceName, ip string, port int, endpoints []string) *Micro {
 	var mn MicroNaming
 	if serviceName != "" && port != 0 {
 		mn = NewMicroNaming(endpoints)
@@ -32,18 +32,18 @@ func NewMicro(serviceName, ip string, port int, endpoints []string) *micro {
 			panic(err.Error)
 		}
 	}
-	m := &micro{serviceName: serviceName, port: port, endpoints: endpoints, serviceConns: sync.Map{}, microNaming: mn}
+	m := &Micro{serviceName: serviceName, port: port, endpoints: endpoints, serviceConns: sync.Map{}, microNaming: mn}
 
 	return m
 }
 
 //ReferServices
 //package all  grpc conntions to maps ，so that you can use it conveniently next time
-func (m *micro) ReferServices(svcNames ...string) {
+func (m *Micro) ReferServices(svcNames ...string) {
 	m.startServiceConns(svcNames, m.endpoints)
 }
 
-func (m *micro) CreateListener() net.Listener {
+func (m *Micro) CreateListener() net.Listener {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", m.port))
 	if err != nil {
 		panic(err.Error())
@@ -53,7 +53,7 @@ func (m *micro) CreateListener() net.Listener {
 }
 
 // startServiceConns:
-func (m *micro) startServiceConns(serverList []string, endpoints []string) {
+func (m *Micro) startServiceConns(serverList []string, endpoints []string) {
 	for _, serviceName := range serverList {
 
 		// register resolver
@@ -73,7 +73,7 @@ func (m *micro) startServiceConns(serverList []string, endpoints []string) {
 // CloseService:
 // 1: remove server from balancer
 // 2: close all established conns
-func (m *micro) CloseService() {
+func (m *Micro) CloseService() {
 	m.microNaming.Unregister()
 	m.serviceConns.Range(func(key interface{}, value interface{}) bool {
 		conn := value.(*grpc.ClientConn)
@@ -83,7 +83,7 @@ func (m *micro) CloseService() {
 	log.Println("GoodBye,See you next time")
 }
 
-func (m *micro) GetConn(serverName string) (*grpc.ClientConn, bool) {
+func (m *Micro) GetConn(serverName string) (*grpc.ClientConn, bool) {
 	connInterface, ok := m.serviceConns.Load(serverName)
 	if !ok {
 		return nil, ok
